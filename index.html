@@ -1,1 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Player with Gain Control</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      background: rgba(0, 0, 0, 0.5); /* Dark, semi-transparent background */
+      color: white;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(10px); /* iOS style blur effect */
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .player-container {
+      background: rgba(0, 0, 0, 0.7); /* Slightly lighter background to contrast with blur */
+      border-radius: 20px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .player-container h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .file-input, .volume-slider {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .file-input input, .volume-slider input {
+      width: 100%;
+      background-color: transparent;
+      border: none;
+      border-radius: 10px;
+      height: 40px;
+      color: white;
+      font-size: 16px;
+    }
+
+    .file-input input[type="file"] {
+      color: white;
+    }
+
+    .volume-slider {
+      margin-top: 10px;
+    }
+
+    .play-button {
+      width: 100%;
+      background-color: #007AFF;
+      color: white;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.3s ease;
+    }
+
+    .play-button:hover {
+      background-color: #005BB5;
+    }
+
+    label {
+      font-size: 14px;
+      display: block;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="player-container">
+  <h1>Audio Player</h1>
+
+  <!-- Player 1 -->
+  <div>
+    <h2>Player 1</h2>
+    <div class="file-input">
+      <input type="file" accept=".mp3, .wav, .m4a, .aac, .ogg, .flac" id="audioFile1" onchange="loadAudio(1)">
+    </div>
+    <audio id="audioPlayer1" controls></audio>
+    <button onclick="togglePlayPause(1)" class="play-button" id="playPauseBtn1">Play</button>
+    <div class="volume-slider">
+      <input type="range" id="volumeSlider1" min="0" max="1" step="0.025" value="0.5" onchange="setVolume(1)">
+      <label for="volumeSlider1">Volume</label>
+    </div>
+  </div>
+
+  <div style="margin-top: 40px;">
+    <!-- Player 2 -->
+    <h2>Player 2</h2>
+    <div class="file-input">
+      <input type="file" accept=".mp3, .wav, .m4a, .aac, .ogg, .flac" id="audioFile2" onchange="loadAudio(2)">
+    </div>
+    <audio id="audioPlayer2" controls></audio>
+    <button onclick="togglePlayPause(2)" class="play-button" id="playPauseBtn2">Play</button>
+    <div class="volume-slider">
+      <input type="range" id="volumeSlider2" min="0" max="1" step="0.025" value="0.5" onchange="setVolume(2)">
+      <label for="volumeSlider2">Volume</label>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Create the AudioContext and GainNode for both players
+  const audioContext1 = new (window.AudioContext || window.webkitAudioContext)();
+  const gainNode1 = audioContext1.createGain();
+  gainNode1.connect(audioContext1.destination);
+
+  const audioContext2 = new (window.AudioContext || window.webkitAudioContext)();
+  const gainNode2 = audioContext2.createGain();
+  gainNode2.connect(audioContext2.destination);
+
+  let player1 = document.getElementById("audioPlayer1");
+  let player2 = document.getElementById("audioPlayer2");
+  let isPlaying1 = false;
+  let isPlaying2 = false;
+
+  function loadAudio(playerNumber) {
+    const fileInput = document.getElementById(`audioFile${playerNumber}`);
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const audioUrl = URL.createObjectURL(file);
+    
+    if (playerNumber === 1) {
+      player1.src = audioUrl;
+      player1.play();
+      const track1 = audioContext1.createMediaElementSource(player1);
+      track1.connect(gainNode1);
+      isPlaying1 = true;
+      document.getElementById("playPauseBtn1").textContent = "Pause";
+    } else if (playerNumber === 2) {
+      player2.src = audioUrl;
+      player2.play();
+      const track2 = audioContext2.createMediaElementSource(player2);
+      track2.connect(gainNode2);
+      isPlaying2 = true;
+      document.getElementById("playPauseBtn2").textContent = "Pause";
+    }
+  }
+
+  function togglePlayPause(playerNumber) {
+    if (playerNumber === 1) {
+      if (isPlaying1) {
+        player1.pause();
+        document.getElementById("playPauseBtn1").textContent = "Play";
+      } else {
+        player1.play();
+        document.getElementById("playPauseBtn1").textContent = "Pause";
+      }
+      isPlaying1 = !isPlaying1;
+    } else if (playerNumber === 2) {
+      if (isPlaying2) {
+        player2.pause();
+        document.getElementById("playPauseBtn2").textContent = "Play";
+      } else {
+        player2.play();
+        document.getElementById("playPauseBtn2").textContent = "Pause";
+      }
+      isPlaying2 = !isPlaying2;
+    }
+  }
+
+  // Set volume using the GainNode instead of the <audio> element
+  function setVolume(playerNumber) {
+    const volume = parseFloat(document.getElementById(`volumeSlider${playerNumber}`).value);
+    if (playerNumber === 1) {
+      gainNode1.gain.value = volume;
+    } else if (playerNumber === 2) {
+      gainNode2.gain.value = volume;
+    }
+  }
+
+
+</script>
+
+</body>
+</html>
+
 
